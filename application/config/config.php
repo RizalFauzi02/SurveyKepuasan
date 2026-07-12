@@ -23,7 +23,17 @@ defined('BASEPATH') or exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/surveykepuasan/';
+// $config['base_url'] = 'http://localhost/surveykepuasan/';
+
+if (!defined('BASE_URL')) {
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $scheme = is_https() ? 'https://' : 'http://';
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
+    $dir = str_replace('\\', '/', dirname($scriptName));
+    $dir = $dir === '.' ? '/' : rtrim($dir, '/') . '/';
+    define('BASE_URL', $scheme . $host . $dir);
+}
+$config['base_url'] = BASE_URL;
 
 /*
 |--------------------------------------------------------------------------

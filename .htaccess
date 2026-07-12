@@ -1,5 +1,12 @@
+<Files ".env">
+    Require all denied
+</Files>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Lindungi file .env dari akses publik
+    RewriteRule ^\.env$ - [F,L]
 
     RewriteCond %{REQUEST_URI} ^system.*
     RewriteRule ^(.*)$ /index.php?/$1 [L]
