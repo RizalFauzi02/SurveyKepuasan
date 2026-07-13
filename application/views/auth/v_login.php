@@ -429,7 +429,17 @@
     <!-- Card -->
     <div class="page-wrapper">
         <div class="card">
-            <?= $this->session->flashdata('pesan') ?>
+                <?php if ($this->session->flashdata('error')): ?>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops..!',
+                                text: '<?= $this->session->flashdata('error') ?>'
+                            });
+                        });
+                    </script>
+                <?php endif; ?>
             <div class="card-accent"></div>
 
             <div class="card-body">
@@ -453,7 +463,8 @@
                 </div>
 
                 <!-- Form -->
-                <form class="login-form" action="<?= base_url('auth/ProsesLogin'); ?>" method="POST">
+                <form class="login-form" action="<?= base_url('auth/login'); ?>" method="POST">
+                    <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>">
 
                     <div class="form-group">
                         <label class="form-label" for="username">Username</label>
