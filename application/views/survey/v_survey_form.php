@@ -6,6 +6,7 @@
     <title>Survei Kepuasan - <?= $room->name ?></title>
     <link rel="icon" type="image/png" href="<?= base_url('assets-tamplate/img/logo-primaya.png'); ?>">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
@@ -220,40 +221,42 @@
                 </div>
 
                 <!-- Dynamic Questions -->
-                <?php foreach ($questions as $q): ?>
-                <div class="question">
-                    <div class="question-label"><?= $q->question_text ?></div>
-                    <?php if ($q->question_type === 'radio'): ?>
-                        <div class="options">
-                            <?php
-                            $options = json_decode($q->options, true);
-                            if ($options):
-                                foreach ($options as $opt): ?>
-                            <label class="option" data-name="question_<?= $q->id ?>" data-value="<?= $opt ?>">
-                                <input type="radio" name="question_<?= $q->id ?>" value="<?= $opt ?>">
-                                <span class="option-indicator"></span>
-                                <span class="option-text"><?= $opt ?></span>
-                            </label>
-                            <?php endforeach; endif; ?>
-                        </div>
-                    <?php elseif ($q->question_type === 'checkbox'): ?>
-                        <div class="options">
-                            <?php
-                            $options = json_decode($q->options, true);
-                            if ($options):
-                                foreach ($options as $opt): ?>
-                            <label class="option" data-name="question_<?= $q->id ?>" data-value="<?= $opt ?>">
-                                <input type="checkbox" name="question_<?= $q->id ?>[]" value="<?= $opt ?>">
-                                <span class="option-indicator checkbox"></span>
-                                <span class="option-text"><?= $opt ?></span>
-                            </label>
-                            <?php endforeach; endif; ?>
-                        </div>
-                    <?php else: ?>
-                        <textarea class="text-input" name="question_<?= $q->id ?>" placeholder="Tulis jawaban Anda di sini..."></textarea>
-                    <?php endif; ?>
+                <div id="dynamic-questions-container">
+                    <?php foreach ($questions as $q): ?>
+                    <div class="question">
+                        <div class="question-label"><?= $q->question_text ?></div>
+                        <?php if ($q->question_type === 'radio'): ?>
+                            <div class="options">
+                                <?php
+                                $options = json_decode($q->options, true);
+                                if ($options):
+                                    foreach ($options as $opt): ?>
+                                <label class="option" data-name="question_<?= $q->id ?>" data-value="<?= $opt ?>">
+                                    <input type="radio" name="question_<?= $q->id ?>" value="<?= $opt ?>">
+                                    <span class="option-indicator"></span>
+                                    <span class="option-text"><?= $opt ?></span>
+                                </label>
+                                <?php endforeach; endif; ?>
+                            </div>
+                        <?php elseif ($q->question_type === 'checkbox'): ?>
+                            <div class="options">
+                                <?php
+                                $options = json_decode($q->options, true);
+                                if ($options):
+                                    foreach ($options as $opt): ?>
+                                <label class="option" data-name="question_<?= $q->id ?>" data-value="<?= $opt ?>">
+                                    <input type="checkbox" name="question_<?= $q->id ?>[]" value="<?= $opt ?>">
+                                    <span class="option-indicator checkbox"></span>
+                                    <span class="option-text"><?= $opt ?></span>
+                                </label>
+                                <?php endforeach; endif; ?>
+                            </div>
+                        <?php else: ?>
+                            <textarea class="text-input" name="question_<?= $q->id ?>" placeholder="Tulis jawaban Anda di sini..."></textarea>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
 
                 <!-- Name (Optional) -->
                 <div class="question">
@@ -291,15 +294,15 @@
             $('#satisfaction-score').val(val);
         });
 
-        // Option selection (radio)
-        $('input[type="radio"]').change(function() {
+        // Option selection (radio) - Event Delegation for dynamic inputs
+        $(document).on('change', 'input[type="radio"]', function() {
             var name = $(this).attr('name');
             $('[data-name="' + name + '"]').removeClass('selected');
             $(this).closest('.option').addClass('selected');
         });
 
-        // Option selection (checkbox)
-        $('input[type="checkbox"]').change(function() {
+        // Option selection (checkbox) - Event Delegation for dynamic inputs
+        $(document).on('change', 'input[type="checkbox"]', function() {
             var label = $(this).closest('.option');
             if ($(this).is(':checked')) {
                 label.addClass('selected');
@@ -308,14 +311,163 @@
             }
         });
 
-        // Text input focus
-        $('.text-input').focus(function() {
+        // Text input focus - Event Delegation for dynamic inputs
+        $(document).on('focus', '.text-input', function() {
             $(this).css('border-color', 'var(--blue-light)');
-        }).blur(function() {
+        }).on('blur', '.text-input', function() {
             $(this).css('border-color', 'var(--border)');
         });
 
-        // Submit
+        // Dynamic Questions HTML Renderer
+        function renderQuestions(questions) {
+            var container = $('#dynamic-questions-container');
+            container.empty();
+
+            if (!questions || questions.length === 0) {
+                return;
+            }
+
+            questions.forEach(function(q) {
+                var html = '<div class="question">';
+                html += '    <div class="question-label">' + escapeHtml(q.question_text) + '</div>';
+
+                if (q.question_type === 'radio') {
+                    html += '    <div class="options">';
+                    var options = [];
+                    try {
+                        options = JSON.parse(q.options);
+                    } catch(e) {
+                        options = [];
+                    }
+                    if (Array.isArray(options)) {
+                        options.forEach(function(opt) {
+                            html += '        <label class="option" data-name="question_' + q.id + '" data-value="' + escapeHtml(opt) + '">';
+                            html += '            <input type="radio" name="question_' + q.id + '" value="' + escapeHtml(opt) + '">';
+                            html += '            <span class="option-indicator"></span>';
+                            html += '            <span class="option-text">' + escapeHtml(opt) + '</span>';
+                            html += '        </label>';
+                        });
+                    }
+                    html += '    </div>';
+                } else if (q.question_type === 'checkbox') {
+                    html += '    <div class="options">';
+                    var options = [];
+                    try {
+                        options = JSON.parse(q.options);
+                    } catch(e) {
+                        options = [];
+                    }
+                    if (Array.isArray(options)) {
+                        options.forEach(function(opt) {
+                            html += '        <label class="option" data-name="question_' + q.id + '" data-value="' + escapeHtml(opt) + '">';
+                            html += '            <input type="checkbox" name="question_' + q.id + '[]" value="' + escapeHtml(opt) + '">';
+                            html += '            <span class="option-indicator checkbox"></span>';
+                            html += '            <span class="option-text">' + escapeHtml(opt) + '</span>';
+                            html += '        </label>';
+                        });
+                    }
+                    html += '    </div>';
+                } else {
+                    html += '    <textarea class="text-input" name="question_' + q.id + '" placeholder="Tulis jawaban Anda di sini..."></textarea>';
+                }
+
+                html += '</div>';
+                container.append(html);
+            });
+        }
+
+        // HTML escaping utility for security
+        function escapeHtml(text) {
+            if (!text) return '';
+            var map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Navbar room switching via AJAX
+        $('.nav-bar a').click(function(e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            var activeLink = $(this);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        var room = res.room;
+                        var questions = res.questions;
+
+                        // Update active state in navbar
+                        $('.nav-bar a').removeClass('active');
+                        activeLink.addClass('active');
+
+                        // Update room info
+                        $('.header .room-badge').text(room.name + ' — Lantai ' + room.floor);
+                        $('title').text('Survei Kepuasan - ' + room.name);
+                        $('input[name="room_id"]').val(room.id);
+                        $('.btn-new').attr('href', url);
+
+                        // Reset rating UI and value
+                        $('.rating-item').removeClass('selected');
+                        $('#satisfaction-score').val('');
+
+                        // Reset optional form text fields
+                        $('input[name="respondent_name"]').val('');
+                        $('textarea[name="feedback"]').val('');
+
+                        // Render new dynamic questions
+                        renderQuestions(questions);
+
+                        // Switch view back to form if in thank you screen
+                        $('#thank-you').hide();
+                        $('#survey-form').show();
+                        $('#submit-area').show();
+
+                        // Update browser URL without reloading
+                        history.pushState(null, '', url);
+                    } else {
+                        Swal.fire('Gagal', res.message || 'Gagal memuat data ruangan.', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Terjadi kesalahan saat memuat data ruangan.', 'error');
+                }
+            });
+        });
+
+        // Dynamic reset when clicking "Isi Survei Lagi" (no reload)
+        $(document).on('click', '.btn-new', function(e) {
+            e.preventDefault();
+
+            var currentRoomId = $('input[name="room_id"]').val();
+
+            // Reset rating UI
+            $('.rating-item').removeClass('selected');
+            $('#satisfaction-score').val('');
+
+            // Reset standard form inputs
+            $('#formSurvei')[0].reset();
+
+            // Restore correct room id
+            $('input[name="room_id"]').val(currentRoomId);
+
+            // Remove selected state class from custom labels
+            $('.option').removeClass('selected');
+
+            // Switch view
+            $('#thank-you').hide();
+            $('#survey-form').show();
+            $('#submit-area').show();
+        });
+
+        // Submit Form via AJAX
         $('#btn-submit').click(function() {
             var score = $('#satisfaction-score').val();
             if (!score) {
@@ -342,8 +494,8 @@
                         $('#thank-you').show();
                     } else {
                         Swal.fire('Gagal', res.message, 'error');
-                        btn.prop('disabled', false).text('Kirim Survei');
                     }
+                    btn.prop('disabled', false).text('Kirim Survei');
                 },
                 error: function() {
                     Swal.fire('Error', 'Terjadi kesalahan server. Silahkan coba lagi.', 'error');

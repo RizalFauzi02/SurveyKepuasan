@@ -24,11 +24,27 @@ class Survey extends CI_Controller
     {
         $room = $this->M_survey->get_room_by_slug($slug);
         if (!$room) {
+            if ($this->input->is_ajax_request()) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Ruangan tidak ditemukan.'
+                ]);
+                return;
+            }
             show_404();
             return;
         }
 
         $questions = $this->M_survey->get_questions_by_room($room->id);
+
+        if ($this->input->is_ajax_request()) {
+            echo json_encode([
+                'status' => 'success',
+                'room' => $room,
+                'questions' => $questions
+            ]);
+            return;
+        }
 
         $data['room'] = $room;
         $data['questions'] = $questions;

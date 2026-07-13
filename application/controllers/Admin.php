@@ -29,6 +29,18 @@ class Admin extends MY_Controller
         $this->load->view('layouts/v_layout_admin', $data);
     }
 
+    public function print_qr($id)
+    {
+        $room = $this->M_room->get_by_id($id);
+        if (!$room) {
+            show_404();
+            return;
+        }
+
+        $data['room'] = $room;
+        $this->load->view('admin/v_print_qr', $data);
+    }
+
     public function get_rooms()
     {
         $this->load->library('table');
@@ -52,7 +64,8 @@ class Admin extends MY_Controller
                 ? '<span class="badge badge-success">Aktif</span>'
                 : '<span class="badge badge-danger">Nonaktif</span>';
 
-            $action = '<button class="btn btn-sm btn-primary btn-edit-room" data-id="' . $row->id . '" title="Edit"><i class="fa fa-edit"></i></button> ';
+            $action = '<a href="' . base_url('admin/print_qr/' . $row->id) . '" target="_blank" class="btn btn-sm btn-info mr-1" title="Cetak QR"><i class="fa fa-qrcode"></i></a>';
+            $action .= '<button class="btn btn-sm btn-primary btn-edit-room mr-1" data-id="' . $row->id . '" title="Edit"><i class="fa fa-edit"></i></button>';
             $action .= '<button class="btn btn-sm btn-danger btn-delete-room" data-id="' . $row->id . '" data-name="' . htmlspecialchars($row->name) . '" title="Hapus"><i class="fa fa-trash"></i></button>';
 
             $data[] = [
