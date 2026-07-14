@@ -87,4 +87,24 @@ class M_room extends CI_Model
         }
         return $this->db->count_all_results($this->table) === 0;
     }
+
+    public function is_sort_order_unique($sort_order, $id = null)
+    {
+        $this->db->where('sort_order', $sort_order);
+
+        if (!empty($id)) {
+            $this->db->where('id !=', $id);
+        }
+
+        return $this->db->count_all_results('rooms') == 0;
+    }
+
+    public function update_question_status($room_id, $is_active)
+    {
+        return $this->db
+            ->where('room_id', $room_id)
+            ->update('survey_questions', [
+                'is_active' => $is_active
+            ]);
+    }
 }

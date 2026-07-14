@@ -429,17 +429,17 @@
     <!-- Card -->
     <div class="page-wrapper">
         <div class="card">
-                <?php if ($this->session->flashdata('error')): ?>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Oops..!',
-                                text: '<?= $this->session->flashdata('error') ?>'
-                            });
+            <?php if ($this->session->flashdata('error')): ?>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops..!',
+                            text: '<?= $this->session->flashdata('error') ?>'
                         });
-                    </script>
-                <?php endif; ?>
+                    });
+                </script>
+            <?php endif; ?>
             <div class="card-accent"></div>
 
             <div class="card-body">
@@ -454,7 +454,7 @@
                         </svg> -->
                     </div>
                     <div class="hospital-name">Primaya Hospital Karawang</div>
-                    <div class="hospital-sub">· Survey Kepuasan Pasien ·</div>
+                    <div class="hospital-sub">· Survey Kepuasan ·</div>
                 </div>
 
                 <!-- Label -->

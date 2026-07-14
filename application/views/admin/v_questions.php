@@ -21,7 +21,7 @@
                     <select class="form-control mr-2" id="filter-room" style="width:250px">
                         <option value="">-- Semua Ruangan --</option>
                         <?php foreach ($rooms as $r): ?>
-                        <option value="<?= $r->id ?>"><?= $r->name ?></option>
+                            <option value="<?= $r->id ?>"><?= $r->name ?></option>
                         <?php endforeach; ?>
                     </select>
                     <button class="btn btn-primary" id="btn-add-question"><i class="fa fa-plus mr-1"></i> Tambah Pertanyaan</button>
@@ -65,7 +65,7 @@
                         <select class="form-control" name="room_id" id="q-room" required>
                             <option value="">-- Pilih Ruangan --</option>
                             <?php foreach ($rooms as $r): ?>
-                            <option value="<?= $r->id ?>"><?= $r->name ?></option>
+                                <option value="<?= $r->id ?>"><?= $r->name ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -107,134 +107,161 @@
 </div>
 
 <script>
-$(document).ready(function() {
-    var table = $('#question-table').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '<?= base_url('admin/get_questions'); ?>',
-            type: 'GET',
-            data: function(d) {
-                d.room_id = $('#filter-room').val();
-            }
-        },
-        columns: [
-            { data: 0, orderable: false, searchable: false },
-            { data: 1 },
-            { data: 2, className: 'text-center' },
-            { data: 3 },
-            { data: 4, className: 'text-center' },
-            { data: 5, className: 'text-center' },
-            { data: 6, orderable: false, searchable: false, className: 'text-center' }
-        ],
-        order: [[4, 'asc']]
-    });
-
-    // Filter by room
-    $('#filter-room').change(function() {
-        table.ajax.reload();
-    });
-
-    // Toggle options visibility
-    $('#q-type').change(function() {
-        if ($(this).val() === 'text') {
-            $('#options-group').hide();
-        } else {
-            $('#options-group').show();
-        }
-    });
-
-    // Add question
-    $('#btn-add-question').click(function() {
-        $('#questionModalLabel').text('Tambah Pertanyaan');
-        $('#questionForm')[0].reset();
-        $('#q-id').val('');
-        $('#q-active').prop('checked', true);
-        $('#options-group').show();
-        $('#q-room').val($('#filter-room').val());
-        $('#questionModal').modal('show');
-    });
-
-    // Edit question
-    $('#question-table').on('click', '.btn-edit-question', function() {
-        var id = $(this).data('id');
-        $.get('<?= base_url('admin/get_question_by_id'); ?>?id=' + id, function(data) {
-            if (data) {
-                $('#questionModalLabel').text('Edit Pertanyaan');
-                $('#q-id').val(data.id);
-                $('#q-room').val(data.room_id);
-                $('#q-text').val(data.question_text);
-                $('#q-type').val(data.question_type);
-                if (data.question_type === 'text') {
-                    $('#options-group').hide();
-                } else {
-                    $('#options-group').show();
-                }
-                if (data.options) {
-                    var opts = JSON.parse(data.options);
-                    $('#q-options').val(opts.join('\n'));
-                } else {
-                    $('#q-options').val('');
-                }
-                $('#q-sort').val(data.sort_order);
-                $('#q-active').prop('checked', data.is_active === '1');
-                $('#questionModal').modal('show');
-            }
-        });
-    });
-
-    // Save question
-    $('#questionForm').on('submit', function(e) {
-        e.preventDefault();
-        var id = $('#q-id').val();
-        var url = id ? '<?= base_url('admin/update_question'); ?>' : '<?= base_url('admin/create_question'); ?>';
-
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    $('#questionModal').modal('hide');
-                    table.ajax.reload(null, false);
-                    Swal.fire('Berhasil', res.message, 'success');
-                } else {
-                    Swal.fire('Gagal', res.message, 'error');
+    $(document).ready(function() {
+        var table = $('#question-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '<?= base_url('admin/get_questions'); ?>',
+                type: 'GET',
+                data: function(d) {
+                    d.room_id = $('#filter-room').val();
                 }
             },
-            error: function() {
-                Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
+            columns: [{
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.settings._iDisplayStart + meta.row + 1;
+                    }
+                },
+                {
+                    data: 1
+                },
+                {
+                    data: 2,
+                    className: 'text-center'
+                },
+                {
+                    data: 3
+                },
+                {
+                    data: 4,
+                    className: 'text-center'
+                },
+                {
+                    data: 5,
+                    className: 'text-center'
+                },
+                {
+                    data: 6,
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center'
+                }
+            ],
+            order: [
+                [4, 'asc']
+            ]
+        });
+
+        // Filter by room
+        $('#filter-room').change(function() {
+            table.ajax.reload();
+        });
+
+        // Toggle options visibility
+        $('#q-type').change(function() {
+            if ($(this).val() === 'text') {
+                $('#options-group').hide();
+            } else {
+                $('#options-group').show();
             }
         });
-    });
 
-    // Delete question
-    $('#question-table').on('click', '.btn-delete-question', function() {
-        var id = $(this).data('id');
-        Swal.fire({
-            title: 'Hapus Pertanyaan?',
-            text: 'Data jawaban terkait juga akan dihapus.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.post('<?= base_url('admin/delete_question'); ?>', {
-                    id: id,
-                    '<?= $this->security->get_csrf_token_name(); ?>': CSRF_TOKEN
-                }, function(res) {
+        // Add question
+        $('#btn-add-question').click(function() {
+            $('#questionModalLabel').text('Tambah Pertanyaan');
+            $('#questionForm')[0].reset();
+            $('#q-id').val('');
+            $('#q-active').prop('checked', true);
+            $('#options-group').show();
+            $('#q-room').val($('#filter-room').val());
+            $('#questionModal').modal('show');
+        });
+
+        // Edit question
+        $('#question-table').on('click', '.btn-edit-question', function() {
+            var id = $(this).data('id');
+            $.get('<?= base_url('admin/get_question_by_id'); ?>?id=' + id, function(data) {
+                if (data) {
+                    if (typeof data === 'string') {
+                        data = JSON.parse(data);
+                    }
+                    $('#questionModalLabel').text('Edit Pertanyaan');
+                    $('#q-id').val(data.id);
+                    $('#q-room').val(data.room_id);
+                    $('#q-text').val(data.question_text);
+                    $('#q-type').val(data.question_type);
+                    if (data.question_type === 'text') {
+                        $('#options-group').hide();
+                    } else {
+                        $('#options-group').show();
+                    }
+                    if (data.options) {
+                        var opts = JSON.parse(data.options);
+                        $('#q-options').val(opts.join('\n'));
+                    } else {
+                        $('#q-options').val('');
+                    }
+                    $('#q-sort').val(data.sort_order);
+                    $('#q-active').prop('checked', data.is_active === '1');
+                    $('#questionModal').modal('show');
+                }
+            });
+        });
+
+        // Save question
+        $('#questionForm').on('submit', function(e) {
+            e.preventDefault();
+            var id = $('#q-id').val();
+            var url = id ? '<?= base_url('admin/update_question'); ?>' : '<?= base_url('admin/create_question'); ?>';
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
                     if (res.status === 'success') {
+                        $('#questionModal').modal('hide');
                         table.ajax.reload(null, false);
                         Swal.fire('Berhasil', res.message, 'success');
                     } else {
                         Swal.fire('Gagal', res.message, 'error');
                     }
-                }, 'json');
-            }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
+                }
+            });
+        });
+
+        // Delete question
+        $('#question-table').on('click', '.btn-delete-question', function() {
+            var id = $(this).data('id');
+            Swal.fire({
+                title: 'Hapus Pertanyaan?',
+                text: 'Data jawaban terkait juga akan dihapus.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('<?= base_url('admin/delete_question'); ?>', {
+                        id: id,
+                        '<?= $this->security->get_csrf_token_name(); ?>': CSRF_TOKEN
+                    }, function(res) {
+                        if (res.status === 'success') {
+                            table.ajax.reload(null, false);
+                            Swal.fire('Berhasil', res.message, 'success');
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    }, 'json');
+                }
+            });
         });
     });
-});
 </script>

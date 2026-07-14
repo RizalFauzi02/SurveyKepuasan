@@ -141,7 +141,20 @@ class Admin extends MY_Controller
         $slug = url_title(strtolower($name), '-', TRUE);
 
         if (!$this->M_room->is_slug_unique($slug, $id)) {
-            echo json_encode(['status' => 'error', 'message' => 'Slug ruangan sudah digunakan.']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Slug ruangan sudah digunakan.'
+            ]);
+            return;
+        }
+
+        $sort_order = $this->input->post('sort_order', TRUE) ?: 0;
+
+        if (!$this->M_room->is_sort_order_unique($sort_order, $id)) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Nomor urutan sudah digunakan, silakan pilih urutan nomor lain.'
+            ]);
             return;
         }
 
@@ -151,14 +164,25 @@ class Admin extends MY_Controller
             'floor' => $this->input->post('floor', TRUE),
             'facility_type' => $this->input->post('facility_type', TRUE),
             'is_active' => $this->input->post('is_active') ? '1' : '0',
-            'sort_order' => $this->input->post('sort_order', TRUE) ?: 0,
+            'sort_order' => $sort_order,
         ];
 
         $update = $this->M_room->update($id, $data);
-        echo json_encode([
-            'status' => $update ? 'success' : 'error',
-            'message' => $update ? 'Ruangan berhasil diupdate.' : 'Gagal mengupdate ruangan.'
-        ]);
+        if ($update) {
+
+            $this->M_room->update_question_status($id, $data['is_active']);
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Ruangan berhasil diupdate.'
+            ]);
+        } else {
+
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Gagal mengupdate ruangan.'
+            ]);
+        }
     }
 
     public function delete_room()
