@@ -32,7 +32,7 @@
                     <table id="question-table" class="table mb-0" style="width:100%">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Pertanyaan</th>
                                 <th>Tipe</th>
                                 <th>Opsi</th>

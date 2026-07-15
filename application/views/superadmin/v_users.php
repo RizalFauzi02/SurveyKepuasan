@@ -24,7 +24,7 @@
                     <table id="user-table" class="table mb-0" style="width:100%">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Username</th>
                                 <th>Unit</th>
                                 <th>Role</th>
@@ -88,108 +88,127 @@
 </div>
 
 <script>
-$(document).ready(function() {
-    var table = $('#user-table').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '<?= base_url('superadmin/get_users'); ?>',
-            type: 'GET'
-        },
-        columns: [
-            { data: 0, orderable: false, searchable: false },
-            { data: 1 },
-            { data: 2 },
-            { data: 3, className: 'text-center' },
-            { data: 4, className: 'text-center' },
-            { data: 5, orderable: false, searchable: false, className: 'text-center' }
-        ]
-    });
-
-    // Add user
-    $('#btn-add-user').click(function() {
-        $('#userModalLabel').text('Tambah User');
-        $('#userForm')[0].reset();
-        $('#u-id').val('');
-        $('#u-active').prop('checked', true);
-        $('#u-password').prop('required', true);
-        $('#pw-label').text('*');
-        $('#pw-hint').text('Minimal 6 karakter');
-        $('#userModal').modal('show');
-    });
-
-    // Edit user
-    $('#user-table').on('click', '.btn-edit-user', function() {
-        var id = $(this).data('id');
-        $.get('<?= base_url('superadmin/get_user_by_id'); ?>?id=' + id, function(data) {
-            if (data) {
-                $('#userModalLabel').text('Edit User');
-                $('#u-id').val(data.id_user);
-                $('#u-username').val(data.username);
-                $('#u-password').val('').prop('required', false);
-                $('#u-unit').val(data.unit);
-                $('#u-role').val(data.is_role);
-                $('#u-active').prop('checked', data.is_active === '1');
-                $('#pw-label').text('');
-                $('#pw-hint').text('Kosongkan jika tidak ingin mengubah password');
-                $('#userModal').modal('show');
-            }
-        });
-    });
-
-    // Save user
-    $('#userForm').on('submit', function(e) {
-        e.preventDefault();
-        var id = $('#u-id').val();
-        var url = id ? '<?= base_url('superadmin/update_user'); ?>' : '<?= base_url('superadmin/create_user'); ?>';
-
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success') {
-                    $('#userModal').modal('hide');
-                    table.ajax.reload(null, false);
-                    Swal.fire('Berhasil', res.message, 'success');
-                } else {
-                    Swal.fire('Gagal', res.message, 'error');
-                }
+    $(document).ready(function() {
+        var table = $('#user-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '<?= base_url('superadmin/get_users'); ?>',
+                type: 'GET'
             },
-            error: function() {
-                Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
-            }
+            columns: [{
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.settings._iDisplayStart + meta.row + 1;
+                    }
+                },
+                {
+                    data: 1
+                },
+                {
+                    data: 2
+                },
+                {
+                    data: 3,
+                    className: 'text-center'
+                },
+                {
+                    data: 4,
+                    className: 'text-center'
+                },
+                {
+                    data: 5,
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center'
+                }
+            ]
         });
-    });
 
-    // Delete user
-    $('#user-table').on('click', '.btn-delete-user', function() {
-        var id = $(this).data('id');
-        var username = $(this).data('username');
-        Swal.fire({
-            title: 'Hapus User?',
-            text: 'User "' + username + '" akan dihapus permanen.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.post('<?= base_url('superadmin/delete_user'); ?>', {
-                    id: id,
-                    '<?= $this->security->get_csrf_token_name(); ?>': CSRF_TOKEN
-                }, function(res) {
+        // Add user
+        $('#btn-add-user').click(function() {
+            $('#userModalLabel').text('Tambah User');
+            $('#userForm')[0].reset();
+            $('#u-id').val('');
+            $('#u-active').prop('checked', true);
+            $('#u-password').prop('required', true);
+            $('#pw-label').text('*');
+            $('#pw-hint').text('Minimal 6 karakter');
+            $('#userModal').modal('show');
+        });
+
+        // Edit user
+        $('#user-table').on('click', '.btn-edit-user', function() {
+            var id = $(this).data('id');
+            $.get('<?= base_url('superadmin/get_user_by_id'); ?>?id=' + id, function(data) {
+                if (data) {
+                    $('#userModalLabel').text('Edit User');
+                    $('#u-id').val(data.id_user);
+                    $('#u-username').val(data.username);
+                    $('#u-password').val('').prop('required', false);
+                    $('#u-unit').val(data.unit);
+                    $('#u-role').val(data.is_role);
+                    $('#u-active').prop('checked', data.is_active === '1');
+                    $('#pw-label').text('');
+                    $('#pw-hint').text('Kosongkan jika tidak ingin mengubah password');
+                    $('#userModal').modal('show');
+                }
+            });
+        });
+
+        // Save user
+        $('#userForm').on('submit', function(e) {
+            e.preventDefault();
+            var id = $('#u-id').val();
+            var url = id ? '<?= base_url('superadmin/update_user'); ?>' : '<?= base_url('superadmin/create_user'); ?>';
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
                     if (res.status === 'success') {
+                        $('#userModal').modal('hide');
                         table.ajax.reload(null, false);
                         Swal.fire('Berhasil', res.message, 'success');
                     } else {
                         Swal.fire('Gagal', res.message, 'error');
                     }
-                }, 'json');
-            }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
+                }
+            });
+        });
+
+        // Delete user
+        $('#user-table').on('click', '.btn-delete-user', function() {
+            var id = $(this).data('id');
+            var username = $(this).data('username');
+            Swal.fire({
+                title: 'Hapus User?',
+                text: 'User "' + username + '" akan dihapus permanen.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('<?= base_url('superadmin/delete_user'); ?>', {
+                        id: id,
+                        '<?= $this->security->get_csrf_token_name(); ?>': CSRF_TOKEN
+                    }, function(res) {
+                        if (res.status === 'success') {
+                            table.ajax.reload(null, false);
+                            Swal.fire('Berhasil', res.message, 'success');
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    }, 'json');
+                }
+            });
         });
     });
-});
 </script>

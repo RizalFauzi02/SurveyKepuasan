@@ -24,7 +24,7 @@
                     <table id="room-table" class="table mb-0" style="width:100%">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Nama Ruangan</th>
                                 <th>Slug</th>
                                 <th>Lantai</th>

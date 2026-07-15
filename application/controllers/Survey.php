@@ -20,6 +20,11 @@ class Survey extends CI_Controller
         redirect('survey/form/' . $rooms[0]->slug);
     }
 
+    public function landingpage()
+    {
+        $this->load->view('landing_page');
+    }
+
     public function form($slug = '')
     {
         $room = $this->M_survey->get_room_by_slug($slug);
